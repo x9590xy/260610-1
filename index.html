@@ -692,10 +692,20 @@
           skillsTableBody.innerHTML = "<tr><td colspan='6' style='text-align:center; color:#718096;'>레벨업으로 배우는 기술이 없습니다.</td></tr>";
         }
 
-        pokemonImage.onload = () => {
-          pokemonName.textContent = `No.${String(randomId).padStart(4, '0')} ${nameText}`;
-          loading.textContent = "전체 리포트 스캔 완료!";
-        };
+    if (levelUpMoves.length > 0) {
+          // ... (기술 테이블 생성 코드) ...
+        } else {
+          skillsTableBody.innerHTML = "<tr><td colspan='6' style='text-align:center; color:#718096;'>레벨업으로 배우는 기술이 없습니다.</td></tr>";
+        }
+
+        // [수정] 이미지가 켜지는 것과 별개로 이름과 번호는 화면에 즉시 반영합니다.
+        pokemonName.textContent = `No.${String(randomId).padStart(4, '0')} ${nameText}`;
+        loading.textContent = "전체 리포트 스캔 완료!";
+
+        // 이미지는 자연스럽게 로드되도록 둡니다. (이전 이벤트 리스너 제거 또는 유지)
+        pokemonImage.onload = null; 
+
+      } catch (error) {
 
       } catch (error) {
         loading.textContent = "통신 에러 발생 (다시 시도해주세요)";
