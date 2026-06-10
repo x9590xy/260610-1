@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔍 전 세대 통합 퍼펙트 도감</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* 배경을 동적으로 그리기 위한 고정 캔버스 */
+    #backgroundCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      pointer-events: none;
+      transition: all 0.5s ease;
+    }
+
+    .card {
+      width: 100%;
+      max-width: 950px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+      z-index: 1;
+    }
+
+    h1 {
+      margin-bottom: 24px;
+      color: #2c3e50;
+      font-size: 26px;
+      text-align: center;
+      text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+    }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    @media (max-width: 768px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .left-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: sticky;
+      top: 20px;
+    }
+
+    .image-box {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      overflow: hidden;
+      border-radius: 20px;
+      background: rgba(248, 250, 252, 0.6);
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border: 2px solid rgba(255,255,255,0.5);
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.05);
+    }
+
+    #pokemonImage {
+      width: 80%;
+      height: 80%;
+      object-fit: contain;
+    }
+
+    .type-container {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .type-badge {
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      color: white;
+      text-shadow: 1px 1px 1px rgba(0,0,0,0.2);
+    }
+
+    #pokemonName {
+      font-size: 24px;
+      font-weight: 800;
+      color: #1a202c;
+      text-align: center;
+      margin-top: 4px;
+      line-height: 1.3;
+    }
+
+    .right-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .info-section {
+      text-align: left;
+      background: rgba(248, 250, 252, 0.8);
+      border-radius: 18px;
+      padding: 24px;
+      font-size: 14px;
+      color: #4a5568;
+    }
+
+    .info-block {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 16px;
+    }
+    .info-block:last-child {
+      margin-bottom: 0;
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .info-title {
+      font-weight: bold;
+      color: #2d3748;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+
+    #pokemonDescription {
+      line-height: 1.6;
+      color: #4a5568;
+      font-style: italic;
+    }
+
+    .evo-flex-container {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 10px;
+    }
+
+    .evo-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 8px;
+      width: 90px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+
+    .evo-node img {
+      width: 60px;
+      height: 60px;
+      object-fit: contain;
+    }
+
+    .evo-node .evo-name {
+      font-size: 11px;
+      font-weight: bold;
+      color: #2d3748;
+      margin-top: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+
+    .evo-arrow {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: #a0aec0;
+      font-weight: bold;
+    }
+
+    .evo-cond {
+      font-size: 10px;
+      color: #718096;
+      max-width: 70px;
+      text-align: center;
+      line-height: 1.2;
+      margin-top: 2px;
+    }
+
+    .skills-table-container {
+      max-height: 280px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      background: white;
+    }
+
+    .skills-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    .skills-table th, .skills-table td {
+      padding: 10px 6px;
+      border-bottom: 1px solid #edf2f7;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .skills-table th {
+      background: #edf2f7;
+      color: #4a5568;
+      position: sticky;
+      top: 0;
+      font-weight: bold;
+      z-index: 10;
+    }
+
+    .clickable-move {
+      color: #3182ce;
+      font-weight: bold;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .clickable-move:hover {
+      color: #2b6cb0;
+    }
+
+    /* 상태이상 배지 스타일 정의 */
+    .status-badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      color: white;
+    }
+
+    #loading {
+      text-align: center;
+      margin-top: 16px;
+      color: #2c3e50;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    button {
+      background: #3182ce;
+      color: white;
+      font-weight: bold;
+      border: none;
+      padding: 16px 24px;
+      border-radius: 16px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000;
+      opacity: 0; visibility: hidden;
+      transition: all 0.3s ease;
+    }
+    .modal-overlay.active {
+      opacity: 1; visibility: visible;
+    }
+    .modal-content {
+      background: white;
+      padding: 28px;
+      border-radius: 20px;
+      width: 90%;
+      max-width: 480px;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    }
+    .modal-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: #2d3748;
+    }
+    .modal-desc {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #4a5568;
+      background: #f7fafc;
+      padding: 18px;
+      border-radius: 12px;
+      border-left: 5px solid #3182ce;
+      text-align: left;
+      margin-bottom: 18px;
+    }
+    .close-modal-btn {
+      background: #e2e8f0;
+      color: #4a5568;
+      padding: 10px 20px;
+      font-size: 14px;
+      border-radius: 10px;
+      box-shadow: none;
+      width: auto;
+    }
+    .close-modal-btn:hover {
+      background: #cbd5e0;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="backgroundCanvas"></canvas>
+
+  <div class="card">
+    <h1>🔍 전 세대 퍼펙트 도감</h1>
+
+    <div class="main-layout">
+      <div class="left-section">
+        <div id="imageBox" class="image-box">
+          <img id="pokemonImage" alt="포켓몬 이미지">
+        </div>
+        <div id="typeContainer" class="type-container"></div>
+        <div id="pokemonName">---</div>
+      </div>
+
+      <div class="right-section">
+        <div class="info-section">
+          <div class="info-block">
+            <div class="info-title">📝 포켓몬 정보 & 도감 설명</div>
+            <div id="pokemonGenera" style="font-weight: bold; margin-bottom: 6px; color: #3182ce;"></div>
+            <div id="pokemonDescription">데이터를 불러오는 중...</div>
+          </div>
+          
+          <div class="info-block">
+            <div class="info-title">🧬 진화 단계 프로필</div>
+            <div id="evolutionChainInfo" class="evo-flex-container">불러오는 중...</div>
+          </div>
+
+          <div class="info-block">
+            <div class="info-title">⚔️ 레벨업으로 배우는 기술 (Lv.1 ~ Lv.100)</div>
+            <p style="font-size: 11px; color:#a0aec0; margin-bottom: 6px;">* 기술 이름을 누르면 특수 연출 리포트를 확인할 수 있습니다.</p>
+            <div class="skills-table-container">
+              <table class="skills-table">
+                <thead>
+                  <tr>
+                    <th style="width: 10%;">레벨</th>
+                    <th style="width: 26%;">기술 이름</th>
+                    <th style="width: 16%;">타입</th>
+                    <th style="width: 15%;">위력</th>
+                    <th style="width: 15%;">명중률</th>
+                    <th style="width: 18%;">상태이상</th>
+                  </tr>
+                </thead>
+                <tbody id="skillsTableBody">
+                  <tr>
+                    <td colspan="6" style="text-align: center; color: #a0aec0;">기술 데이터를 생성하고 있습니다...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <button id="newPokemonBtn">다른 포켓몬 조사</button>
+      </div>
+    </div>
+
+    <p id="loading">데이터를 불러오는 중...</p>
+  </div>
+
+  <div id="moveModal" class="modal-overlay">
+    <div class="modal-content">
+      <div id="modalTitle" class="modal-title">기술 연출</div>
+      <div id="modalDesc" class="modal-desc">연출 정보를 분석하는 중...</div>
+      <button id="closeModalBtn" class="close-modal-btn">확인</button>
+    </div>
+  </div>
+
+  <script>
+    const pokemonImage = document.getElementById("pokemonImage");
+    const pokemonName = document.getElementById("pokemonName");
+    const loading = document.getElementById("loading");
+    const button = document.getElementById("newPokemonBtn");
+    const imageBox = document.getElementById("imageBox");
+    const typeContainer = document.getElementById("typeContainer");
+    
+    const pokemonGenera = document.getElementById("pokemonGenera");
+    const pokemonDescription = document.getElementById("pokemonDescription");
+    const evolutionChainInfo = document.getElementById("evolutionChainInfo");
+    const skillsTableBody = document.getElementById("skillsTableBody");
+
+    const moveModal = document.getElementById("moveModal");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalDesc = document.getElementById("modalDesc");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+
+    let currentPokemonName = "포켓몬";
+
+    // 타입별 색상 설정 및 배경테마 연동 정보 확장
+    const typeStyles = {
+      normal:   { name: "노말", color: "#A8A77A", bgGradients: ['#e2e8f0', '#cbd5e1', '#94a3b8'], particleColor: 'rgba(148, 163, 184, 0.5)' },
+      fire:     { name: "불꽃", color: "#EE8130", bgGradients: ['#ffedd5', '#fed7aa', '#f97316'], particleColor: 'rgba(239, 68, 68, 0.5)' },
+      water:    { name: "물",   color: "#6390F0", bgGradients: ['#e0f2fe', '#bae6fd', '#38bdf8'], particleColor: 'rgba(56, 189, 248, 0.5)' },
+      electric: { name: "전기", color: "#F7D02C", bgGradients: ['#fef9c3', '#fef08a', '#eab308'], particleColor: 'rgba(234, 179, 8, 0.6)' },
+      grass:    { name: "풀",   color: "#7AC74C", bgGradients: ['#f0fdf4', '#bbf7d0', '#4ade80'], particleColor: 'rgba(74, 222, 128, 0.5)' },
+      ice:      { name: "얼음", color: "#96D9D6", bgGradients: ['#ecfeff', '#cffafe', '#22d3ee'], particleColor: 'rgba(6, 182, 212, 0.4)' },
+      fighting: { name: "격투", color: "#C22E28", bgGradients: ['#fee2e2', '#fca5a5', '#ef4444'], particleColor: 'rgba(185, 28, 28, 0.4)' },
+      poison:   { name: "독",   color: "#A33EA1", bgGradients: ['#fdf4ff', '#f3e8ff', '#d8b4fe'], particleColor: 'rgba(168, 85, 247, 0.4)' },
+      ground:   { name: "땅",   color: "#E2BF65", bgGradients: ['#fef3c7', '#fde68a', '#f59e0b'], particleColor: 'rgba(180, 83, 9, 0.4)' },
+      flying:   { name: "비행", color: "#A98FF3", bgGradients: ['#f0f9ff', '#e0f2fe', '#bae6fd'], particleColor: 'rgba(14, 165, 233, 0.3)' },
+      psychic:  { name: "에스퍼",color: "#F95587", bgGradients: ['#fff1f2', '#ffe4e6', '#fda4af'], particleColor: 'rgba(244, 63, 94, 0.4)' },
+      bug:      { name: "벌레", color: "#A6B91A", bgGradients: ['#f7fee7', '#ecfccb', '#d9f99d'], particleColor: 'rgba(132, 204, 22, 0.4)' },
+      rock:     { name: "바위", color: "#B6A136", bgGradients: ['#fafaf9', '#f5f5f4', '#e7e5e4'], particleColor: 'rgba(120, 113, 108, 0.4)' },
+      ghost:    { name: "고스트",color: "#7c538c", bgGradients: ['#faf5ff', '#ebd5ff', '#c084fc'], particleColor: 'rgba(147, 51, 234, 0.4)' },
+      dragon:   { name: "드래곤",color: "#6F35FC", bgGradients: ['#e0e7ff', '#c7d2fe', '#818cf8'], particleColor: 'rgba(79, 70, 229, 0.4)' },
+      steel:    { name: "강철", color: "#B7B7CE", bgGradients: ['#f1f5f9', '#e2e8f0', '#cbd5e1'], particleColor: 'rgba(100, 116, 139, 0.4)' },
+      fairy:    { name: "페어리",color: "#D685AD", bgGradients: ['#fff5f5', '#fff0f6', '#fcc2d7'], particleColor: 'rgba(240, 101, 149, 0.5)' },
+      dark:     { name: "악",   color: "#705746", bgGradients: ['#1e293b', '#334155', '#475569'], particleColor: 'rgba(15, 23, 42, 0.6)' }
+    };
+
+    // 기본 배경 정보 설정
+    let currentBgTheme = typeStyles.grass;
+
+    // --- 1. 포켓몬 타입 연동 다이내믹 Canvas 배경 시스템 ---
+    const canvas = document.getElementById('backgroundCanvas');
+    const ctx = canvas.getContext('2d');
+    let leaves = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // 흩날리는 이펙트 조각 초기화
+    for(let i=0; i<30; i++) {
+      leaves.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: Math.random() * 6 + 3,
+        speed: Math.random() * 0.8 + 0.4,
+        wobble: Math.random() * 2
+      });
+    }
+
+    function drawBackground() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // 현재 포켓몬의 타입 스펙트럼 그라데이션 형성
+      let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      const grads = currentBgTheme.bgGradients;
+      gradient.addColorStop(0, grads[0]);
+      gradient.addColorStop(0.5, grads[1]);
+      gradient.addColorStop(1, grads[2]);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 타입 테마에 매칭된 색상으로 입자 렌더링
+      ctx.fillStyle = currentBgTheme.particleColor;
+      ctx.beginPath();
+      for(let i = 0; i < leaves.length; i++) {
+        let l = leaves[i];
+        ctx.moveTo(l.x, l.y);
+        ctx.arc(l.x, l.y, l.r, 0, Math.PI * 2, true);
+
+        l.y += l.speed;
+        l.x += Math.sin(l.wobble) * 0.4;
+        l.wobble += 0.01;
+
+        if(l.y > canvas.height) {
+          leaves[i] = { x: Math.random() * canvas.width, y: -10, r: l.r, speed: l.speed, wobble: l.wobble };
+        }
+      }
+      ctx.fill();
+      requestAnimationFrame(drawBackground);
+    }
+    drawBackground();
+
+
+    // --- 2. 기술명 패턴 분석을 통한 상태이상 분류 함수 ---
+    function detectStatusEffect(moveName, moveType, damageClass) {
+      if (damageClass !== "status") return { text: "-", color: "transparent" };
+
+      const name = moveName.replace(/\s+/g, "");
+
+      if (["독가루", "독독", "오물", "맹독", "독실"].some(k => name.includes(k)) || moveType === "독") {
+        return { text: "독", color: "#A33EA1" };
+      }
+      if (["전기자석파", "볼트", "스파크", "뽐내기", "뱀눈초리"].some(k => name.includes(k)) || moveType === "전기") {
+        return { text: "마비", color: "#F7D02C" };
+      }
+      if (["도깨비불", "불꽃", "깨비불", "연옥"].some(k => name.includes(k)) || moveType === "불꽃") {
+        return { text: "화상", color: "#EE8130" };
+      }
+      if (["하품", "수면", "잠내기", "악마의키스", "풀죽음"].some(k => name.includes(k))) {
+        return { text: "수면", color: "#A8A77A" };
+      }
+      if (["얼음", "동토", "절대영도", "눈보라"].some(k => name.includes(k)) || moveType === "얼음") {
+        return { text: "얼음", color: "#96D9D6" };
+      }
+      if (["명상", "춤", "철벽", "성장", "파워", "업", "단단", "고속", "충전", "기 모으기"].some(k => name.includes(k))) {
+        return { text: "랭크업", color: "#4ade80" };
+      }
+      if (["째려보기", "울부짖음", "소리", "다운", "감소", "연막", "거짓울음", "애교"].some(k => name.includes(k))) {
+        return { text: "랭크다운", color: "#f87171" };
+      }
+      
+      return { text: "변화", color: "#60a5fa" };
+    }
+
+    // --- 3. 위력별 다이내믹 컬러 변환 스케일 ---
+    function getPowerStyle(power) {
+      if (power === "-") return { text: "-", color: "#a0aec0" };
+      const num = parseInt(power);
+      if (num >= 110) return { text: power, color: "#9333ea" }; // 초강력 기술 (보라)
+      if (num >= 75)  return { text: power, color: "#ef4444" }; // 강력 공격기 (빨강)
+      if (num >= 40)  return { text: power, color: "#f97316" }; // 주력기 (주황)
+      return { text: power, color: "#10b981" };                 // 약식기/연타형 (초록)
+    }
+
+    // --- 4. 명중률별 다이내믹 컬러 및 포맷팅 스케일 ---
+    function getAccuracyStyle(accuracy) {
+      if (accuracy === "-") return { text: "필중", color: "#3b82f6" }; // 필중 기술 (파랑)
+      const num = parseInt(accuracy);
+      if (num === 100) return { text: "100%", color: "#10b981" };    // 안정적 (초록)
+      if (num >= 80)   return { text: accuracy + "%", color: "#eab308" }; // 주의 요함 (노랑)
+      return { text: accuracy + "%", color: "#ef4444" };              // 저명중 도박기 (빨강)
+    }
+
+
+    // --- 5. 포켓몬 및 기술 데이터 연산 패치 엔진 ---
+    async function getRandomPokemon() {
+      loading.textContent = "전 세대 퍼펙트 실시간 데이터 추출 중...";
+      skillsTableBody.innerHTML = "<tr><td colspan='6' style='text-align:center;'>기술 연산 및 렌더링 중...</td></tr>";
+      evolutionChainInfo.innerHTML = "진화 링크 데이터 동기화 중...";
+      typeContainer.innerHTML = "";
+      
+      const randomId = Math.floor(Math.random() * 1025) + 1;
+
+      try {
+        const resDetail = await fetch(`https://pokeapi.co/api/v2/pokemon/${randomId}`);
+        const dataDetail = await resDetail.json();
+        
+        pokemonImage.src = dataDetail.sprites.other["official-artwork"].front_default;
+
+        // 메인 타입 추출 및 배경 테마 동적 세팅 변경!!
+        const mainType = dataDetail.types[0].type.name;
+        currentBgTheme = typeStyles[mainType] || typeStyles.normal;
+        button.style.backgroundColor = currentBgTheme.color;
+
+        dataDetail.types.forEach(t => {
+          const typeInfo = typeStyles[t.type.name];
+          if(typeInfo) {
+            const badge = document.createElement("span");
+            badge.className = "type-badge";
+            badge.style.backgroundColor = typeInfo.color;
+            badge.textContent = typeInfo.name;
+            typeContainer.appendChild(badge);
+          }
+        });
+
+        const resSpecies = await fetch(`https://pokeapi.co/api/v2/pokemon-species/${randomId}`);
+        const dataSpecies = await resSpecies.json();
+        
+        const koreanNameObj = dataSpecies.names.find(n => n.language.name === "ko");
+        const nameText = koreanNameObj ? koreanNameObj.name : dataDetail.name;
+        currentPokemonName = nameText; 
+
+        const koGenus = dataSpecies.genera.find(g => g.language.name === "ko");
+        pokemonGenera.textContent = koGenus ? `분류: ${koGenus.genus}` : "분류: 미확인 포켓몬";
+
+        const koDescObj = dataSpecies.flavor_text_entries.find(f => f.language.name === "ko");
+        pokemonDescription.textContent = koDescObj ? koDescObj.flavor_text.replace(/\n/g, " ") : "도감 설명 준비 중입니다.";
+
+        if (dataSpecies.evolution_chain) {
+          const resEvo = await fetch(dataSpecies.evolution_chain.url);
+          const dataEvo = await resEvo.json();
+          await renderFullEvolutionChain(dataEvo.chain);
+        } else {
+          evolutionChainInfo.textContent = "이 포켓몬은 고유 개체이며 진화 체인이 존재하지 않습니다.";
+        }
+
+        // 자력기 추출 데이터 가공 및 정렬
+        const levelUpMoves = dataDetail.moves.filter(m => {
+          return m.version_group_details.some(d => d.move_learn_method.name === "level-up");
+        }).map(m => {
+          const lvlDetail = m.version_group_details.find(d => d.move_learn_method.name === "level-up");
+          return {
+            name: m.move.name,
+            url: m.move.url,
+            level: lvlDetail ? lvlDetail.level_learned_at : 1
+          };
+        }).sort((a, b) => a.level - b.level);
+
+        if (levelUpMoves.length > 0) {
+          skillsTableBody.innerHTML = "";
+          
+          const movePromises = levelUpMoves.map(async (move) => {
+            try {
+              const resMove = await fetch(move.url);
+              const dataMove = await resMove.json();
+              const koMoveName = dataMove.names.find(n => n.language.name === "ko");
+              const typeKo = typeStyles[dataMove.type.name]?.name || dataMove.type.name;
+              
+              return {
+                level: move.level,
+                name: koMoveName ? koMoveName.name : move.name,
+                type: typeKo,
+                power: dataMove.power ? dataMove.power : "-",
+                accuracy: dataMove.accuracy ? dataMove.accuracy : "-",
+                damage_class: dataMove.damage_class.name,
+                rawType: dataMove.type.name
+              };
+            } catch {
+              return { level: move.level, name: move.name, type: "-", power: "-", accuracy: "-", damage_class: "physical", rawType: "normal" };
+            }
+          });
+
+          const resolvedMoves = await Promise.all(movePromises);
+
+          resolvedMoves.forEach(move => {
+            const row = document.createElement("tr");
+            const typeKey = Object.keys(typeStyles).find(key => typeStyles[key].name === move.type) || "normal";
+            const badgeColor = typeStyles[typeKey].color;
+
+            // 수치 가공 처리
+            const pStyle = getPowerStyle(move.power);
+            const aStyle = getAccuracyStyle(move.accuracy);
+            const sStyle = detectStatusEffect(move.name, move.type, move.damage_class);
+
+            let statusTdHtml = `<span style="color:#cbd5e1;">-</span>`;
+            if(sStyle.text !== "-") {
+              statusTdHtml = `<span class="status-badge" style="background-color:${sStyle.color}">${sStyle.text}</span>`;
+            }
+
+            row.innerHTML = `
+              <td style="font-weight: bold; color: #4a5568;">Lv. ${move.level}</td>
+              <td>
+                <span class="clickable-move" onclick="showMoveEffect('${move.name}', '${move.type}', '${move.damage_class}', '${move.power}')">
+                  ${move.name}
+                </span>
+              </td>
+              <td><span class="type-badge" style="background-color:${badgeColor}; font-size:11px; padding:2px 8px;">${move.type}</span></td>
+              <td style="font-weight: 800; color: ${pStyle.color}">${pStyle.text}</td>
+              <td style="font-weight: 800; color: ${aStyle.color}">${aStyle.text}</td>
+              <td>${statusTdHtml}</td>
+            `;
+            skillsTableBody.appendChild(row);
+          });
+        } else {
+          skillsTableBody.innerHTML = "<tr><td colspan='6' style='text-align:center; color:#718096;'>레벨업으로 배우는 기술이 없습니다.</td></tr>";
+        }
+
+        pokemonImage.onload = () => {
+          pokemonName.textContent = `No.${String(randomId).padStart(4, '0')} ${nameText}`;
+          loading.textContent = "전체 리포트 스캔 완료!";
+        };
+
+      } catch (error) {
+        loading.textContent = "통신 에러 발생 (다시 시도해주세요)";
+        console.error(error);
+      }
+    }
+
+
+    // --- 6. 모달 다이내믹 기술 모션 리포트 표출 장치 ---
+    function showMoveEffect(moveName, moveType, damageClass, power) {
+      modalTitle.textContent = `⚔️ ${currentPokemonName}의 [${moveName}] 시전!`;
+      let motionText = "";
+
+      if (damageClass === "status") {
+        if (["독가루", "독독", "오물공격"].some(m => moveName.includes(m)) || moveType === "독") {
+          motionText = `💜 **${currentPokemonName}**의 몸에서 치명적인 보라색 독소가 뿜어져 나옵니다! 상대방은 독기에 완전 노출되어 온몸에 독이 퍼지는 **[독]** 상태이상에 걸렸습니다. 매 턴마다 고정 대미지를 입게 됩니다!`;
+        } 
+        else if (["전기자석파", "뽐내기", "나비춤"].some(m => moveName.includes(m)) || moveType === "전기") {
+          motionText = `💛 **${currentPokemonName}**이 강력한 고주파 스파크 전류를 방출합니다! 황금빛 전류가 상대방의 신경계를 묶어버리며 몸을 굳게 만드는 **[마비]** 상태이상에 빠뜨렸습니다. 스피드가 급감하며 행동 확률이 통제됩니다.`;
+        } 
+        else if (["도깨비불", "칼춤", "용의춤"].some(m => moveName.includes(m)) || moveType === "불꽃") {
+          motionText = `❤️ **${currentPokemonName}**의 주위에 기괴하고 뜨거운 불꽃 무리가 피어오릅니다. 이 불꽃이 상대에게 전달되어 치명적인 **[화상]** 상태이상에 빠뜨렸습니다! 상대의 물리 공격 위력이 즉시 절반으로 토막 납니다.`;
+        } 
+        else if (["하품", "수면가루"].some(m => moveName.includes(m))) {
+          motionText = `💤 **${currentPokemonName}**이 안락하고 몽환적인 수면 기운을 전장에 살포합니다. 상대방은 밀려오는 졸음을 이기지 못하고 눈을 붙이며 **[수면]** 상태에 빠져들어 행동 불가 상태가 되었습니다.`;
+        } 
+        else if (moveType === "얼음" || ["흰안개", "녹기"].some(m => moveName.includes(m))) {
+          motionText = `❄️ **${currentPokemonName}**이 주변 수분을 완전히 얼리는 절대영도 기류를 발산합니다! 상대방의 온몸이 순식간에 꽁꽁 얼어붙어 해제될 때까지 아무 행동도 할 수 없는 혹독한 **[얼음]** 상태에 갇혔습니다!`;
+        }
+        else if (["명상", "그림자분신", "철벽", "성장", "코스모파워", "벌크업", "단단해지기", "고속이동"].some(m => moveName.includes(m)) || power === "-") {
+          motionText = `✨ **${currentPokemonName}**이 내면의 에너지를 극한으로 끌어올려 버프 필드를 구축합니다! 오라가 발생하며, 자신 전용 능력치 랭크를 **[대폭 랭크업]** 시켰습니다.`;
+        } 
+        else {
+          motionText = `📉 **${currentPokemonName}**이 무시무시한 기선제압 포효나 날카로운 기운을 표출합니다! 적진을 위축시켜 상대방의 능력치를 강제로 꺾어버리는 **[랭크다운 디버프]**를 부여했습니다.`;
+        }
+      } 
+      else {
+        switch(moveType) {
+          case "불꽃":
+            motionText = `🔥 **${currentPokemonName}**의 온몸이 새빨갛게 타오릅니다! 압축 화염 폭풍을 구체 형태로 전면에 대폭발시켜 막강한 화염 대미지를 입힙니다.`;
+            break;
+          case "물":
+            motionText = `💧 **${currentPokemonName}**이 요동치는 거대 수압 장벽을 생성합니다! 헤아릴 수 없는 질량의 파도를 형성하여 적을 그대로 덮쳐 휩쓸어버립니다!`;
+            break;
+          case "풀":
+            motionText = `🍃 **${currentPokemonName}**이 자연의 식물 동조를 공명시킵니다. 칼날이 장착된 수천 개의 나뭇잎 태풍이 회오리치며 상대방의 방어 장벽을 연타로 가르고 대미지를 줍니다!`;
+            break;
+          case "전기":
+            motionText = `⚡ **${currentPokemonName}**의 증폭 기관에 전자기 폭풍이 휘몰아칩니다! 굉음과 함께 하늘에서 거대한 마른하늘의 날벼락 낙뢰를 그대로 내리꽂아 감전 충격을 줍니다!`;
+            break;
+          case "격투":
+            motionText = `👊 **${currentPokemonName}**이 시속 수백 킬로미터의 속도로 땅을 박차고 돌진합니다! 정권 지르기와 파괴적인 연타 발차기 충격을 가해 급소를 깨부숩니다!`;
+            break;
+          case "에스퍼":
+            motionText = `🔮 **${currentPokemonName}**의 눈이 공명적인 자줏빛으로 발광합니다. 왜곡된 시공간의 강력한 충격파를 뇌리에 직접 방출하여, 물리 방어력을 무시하는 정신 대미지를 입힙니다.`;
+            break;
+          default:
+            motionText = `💥 **${currentPokemonName}**이 저돌적으로 몸을 날려 기본에 충실하면서도 체중이 완벽히 실린 묵직한 물리적 일격을 가해 적을 저 멀리 튕겨냅니다!`;
+        }
+      }
+
+      modalDesc.innerHTML = motionText;
+      moveModal.classList.add("active");
+    }
+
+    closeModalBtn.addEventListener("click", () => moveModal.classList.remove("active"));
+    moveModal.addEventListener("click", (e) => { if(e.target === moveModal) moveModal.classList.remove("active"); });
+
+
+    // --- 7. 진화 단계 추적 처리 모듈 ---
+    async function getPokemonSummary(speciesUrl) {
+      try {
+        const resSpecies = await fetch(speciesUrl);
+        const dataSpecies = await resSpecies.json();
+        const id = dataSpecies.id;
+        const resDetail = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+        const dataDetail = await resDetail.json();
+        
+        const imgUrl = dataDetail.sprites.other["official-artwork"].front_default || dataDetail.sprites.front_default;
+        const koNameObj = dataSpecies.names.find(n => n.language.name === "ko");
+        const name = koNameObj ? koNameObj.name : dataSpecies.name;
+        
+        return { name, img: imgUrl };
+      } catch {
+        return { name: "미확인", img: "" };
+      }
+    }
+
+    function getEvolutionCondition(details) {
+      if (!details) return "";
+      if (details.min_level) return `Lv.${details.min_level}`;
+      if (details.item) return "아이템 사용";
+      if (details.trigger?.name === "trade") return "통신 교환";
+      if (details.holding_item) return "아이템 소지";
+      if (details.min_happiness) return "친밀도 레벨업";
+      if (details.known_move) return "특정기술 습득";
+      return "특수 진화";
+    }
+
+    function createEvoNodeHtml(pokemon) {
+      return `
+        <div class="evo-node">
+          <img src="${pokemon.img}" alt="${pokemon.name}">
+          <div class="evo-name">${pokemon.name}</div>
+        </div>
+      `;
+    }
+
+    function createArrowHtml(condition) {
+      return `
+        <div class="evo-arrow">
+          ➔
+          <div class="evo-cond">${condition}</div>
+        </div>
+      `;
+    }
+
+    async function renderFullEvolutionChain(chain) {
+      evolutionChainInfo.innerHTML = "";
+      let nodes = [];
+
+      if (chain.species) {
+        const p1 = await getPokemonSummary(chain.species.url);
+        nodes.push({ type: 'node', data: p1 });
+      }
+
+      if (chain.evolves_to && chain.evolves_to.length > 0) {
+        const nextChain = chain.evolves_to[0];
+        const p2 = await getPokemonSummary(nextChain.species.url);
+        const cond1 = getEvolutionCondition(nextChain.evolution_details[0]);
+        
+        nodes.push({ type: 'arrow', data: cond1 });
+        nodes.push({ type: 'node', data: p2 });
+
+        if (nextChain.evolves_to && nextChain.evolves_to.length > 0) {
+          const finalChain = nextChain.evolves_to[0];
+          const p3 = await getPokemonSummary(finalChain.species.url);
+          const cond2 = getEvolutionCondition(finalChain.evolution_details[0]);
+          
+          nodes.push({ type: 'arrow', data: cond2 });
+          nodes.push({ type: 'node', data: p3 });
+        }
+      }
+
+      if (nodes.length === 1) {
+        evolutionChainInfo.innerHTML = createEvoNodeHtml(nodes[0].data) + `<span style="font-size:12px; margin-left:10px; color:#718096;">(진화가 없는 고유 단일 개체)</span>`;
+      } else {
+        nodes.forEach(item => {
+          if (item.type === 'node') {
+            evolutionChainInfo.innerHTML += createEvoNodeHtml(item.data);
+          } else {
+            evolutionChainInfo.innerHTML += createArrowHtml(item.data);
+          }
+        });
+      }
+    }
+
+    getRandomPokemon();
+    button.addEventListener("click", getRandomPokemon);
+  </script>
+
+</body>
+</html>
